@@ -32,26 +32,34 @@ var W = canvas.width  = window.innerWidth-6;
 var H = canvas.height = window.innerHeight-50;
 
 
-function sendJSONXMLHTTPRequest(url, objects, callback) {
-    var xhr = new XMLHttpRequest();
-    xhr.onreadystatechange = function () {
-        if (xhr.readyState==4) {
-            try {
-                if (xhr.status==200) {
-                    //XXX: parse some JSON from the request!
-                    //XXX: Pass the data to the callback!
-                }
-            } 
-            catch(e) {
-                alert('Error: ' + e.name);
-            }
-        }
-    };
-    //XXX: POST to a URL
-    //XXX: set the mimetype and the accept headers!
-    // Remember to use application/json !
+function getJSON(url){
+    var request = new Request(url);
+	return fetch(request).then((response) => {
+		if (response.status === 200) {
+		    return response.json();
+		} else {
+		    alert("error: " + response.status);
+		}
+	 });
 }
 
+function postJSON(url, obj){
+    var myHeaders = new Headers();
+    myHeaders.append("Content-Type", "application/json");
+    var init = {
+	method: 'POST',
+	headers: myHeaders,
+	body: JSON.stringify(obj)
+    };
+    var request = new Request(url, init);
+	return fetch(request).then((response) => {
+		if (response.status === 200) {
+		  return response.json();
+		} else {
+		    alert("error: " + response.status);
+		}
+	 });
+}
 
 world = {};
 
@@ -136,9 +144,8 @@ function getPosition(e) {
 
 function addEntity(entity, data) {
     world[entity] = data;
+    postJSON("../entity/" + entity, data);
     drawNextFrame(); // (but should we?)
-    //XXX: Send a XHTML Request that updates the entity you just  modified!
-
 }
 
 var counter = 0;
@@ -261,13 +268,20 @@ mouse.mousedraggers.push(function(x,y,clicked,e) {
 
 
 function update() {
+    getJSON("../world").then((json) => {
+	//console.log(json);
+	for (var key in json) {
+	world[key] = json[key];
+	console.log(world);
+	}
+	});
     //XXX: TODO Get the world from the webservice using a XMLHTTPRequest
     drawFrame();
 }
 
 // 30 frames per second
-setInterval( update, 1000/30.0);
-
+//setInterval( update, 1000/30.0);
+setInterval( update, 1000);
 
 
     </script>
